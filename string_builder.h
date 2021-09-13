@@ -1,6 +1,8 @@
 #ifndef STRING_BUILDER_H_INCLUDE
 #define STRING_BUILDER_H_INCLUDE
 
+#include <stdarg.h> // va_list
+
 #ifndef SB_BUFFER_CAPACITY
 #define SB_BUFFER_CAPACITY 16384 // Define this before including to change the buffer capacity.
 #endif
@@ -48,6 +50,7 @@ extern void SB_DECORATE(append)(String_Builder *sb, char *string);
 #else // Compiling as C, so link with 'extern "C"'.
 SB__PUBLICDEC void SB_DECORATE(append)(String_Builder *sb, char *string);
 #endif
+SB__PUBLICDEC void SB_DECORATE(vappendf)(String_Builder *sb, char *format, va_list va);
 SB__PUBLICDEC void SB_DECORATE(appendf)(String_Builder *sb, char *format, ...);
 SB__PUBLICDEC int SB_DECORATE(to_string)(String_Builder *sb, char **string);
 
@@ -170,11 +173,8 @@ SB__PUBLICDEF void SB_DECORATE(append)(String_Builder *sb, char *string)
     SB_DECORATE(append_len)(sb, string, length);
 }
 
-SB__PUBLICDEF void SB_DECORATE(appendf)(String_Builder *sb, char *format, ...)
+SB__PUBLICDEF void SB_DECORATE(vappendf)(String_Builder *sb, char *format, va_list va)
 {
-    va_list vl;
-    va_start(vl, format);
-
     while (*format) {
         int pos = 0;
         while (format[pos] != '%' && format[pos] != '\0') {
@@ -197,6 +197,14 @@ SB__PUBLICDEF void SB_DECORATE(appendf)(String_Builder *sb, char *format, ...)
         }
         ++format;
     }
+}
+
+SB__PUBLICDEF void SB_DECORATE(appendf)(String_Builder *sb, char *format, ...)
+{
+    va_list va;
+    va_start(va, format);
+    SB_DECORATE(vappendf)(sb, format, va);
+    va_end(va);
 }
 
 SB__PUBLICDEF int SB_DECORATE(to_string)(String_Builder *sb, char **string)
