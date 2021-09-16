@@ -96,15 +96,15 @@ SB__PUBLICDEF void SB_DECORATE(free)(String_Builder *sb)
     if (!sb)
         return;
 
-    while (sb->first_buffer.next) {
-        Sb_Buffer *last = sb->first_buffer.next;
-        Sb_Buffer *prev = sb->first_buffer.next;
-        while (last->next) {
-            prev = last;
-            last = last->next;
-        }
-        sb__free(last);
-        prev->next = NULL;
+    while (sb->number_of_buffers-- > 1) {
+        // Get the second to last buffer.
+        Sb_Buffer *new_last = &sb->first_buffer;
+        while (new_last->next != sb->last_buffer)
+            new_last = new_last->next;
+
+        sb__free(sb->last_buffer);
+        new_last->next = NULL;
+        sb->last_buffer = new_last;
     }
 }
 
