@@ -242,8 +242,10 @@ SB__PUBLICDEF void SB_DECORATE(appendf)(String_Builder *sb, char *format, ...)
 
 SB__PUBLICDEF int SB_DECORATE(to_string)(String_Builder *sb, char **string)
 {
-    if (!sb)
-        return 0;
+    if (!sb) {
+        *string = NULL;
+        return -1;
+    }
 
     int total_length = sb->first_buffer.length;
     Sb_Buffer *buf = &sb->first_buffer;
