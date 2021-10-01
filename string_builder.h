@@ -70,9 +70,9 @@ void *sb__malloc(size_t size)
     return VirtualAlloc(0, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 }
 
-void sb__free(void *ptr)
+void sb__free(void *ptr, size_t size)
 {
-    VirtualFree(ptr, sizeof(ptr), MEM_RELEASE);
+    VirtualFree(ptr, size, MEM_RELEASE);
 }
 
 #else
@@ -102,7 +102,7 @@ SB__PUBLICDEF void SB_DECORATE(free)(String_Builder *sb)
         while (new_last->next != sb->last_buffer)
             new_last = new_last->next;
 
-        sb__free(sb->last_buffer);
+        sb__free(sb->last_buffer, sizeof(Sb_Buffer));
         new_last->next = NULL;
         sb->last_buffer = new_last;
     }
