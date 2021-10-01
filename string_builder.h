@@ -44,6 +44,7 @@ typedef struct String_Builder {
 
 SB__PUBLICDEC void SB_DECORATE(init)(String_Builder *sb);
 SB__PUBLICDEC void SB_DECORATE(free)(String_Builder *sb);
+SB__PUBLICDEC int SB_DECORATE(is_empty)(String_Builder *sb);
 SB__PUBLICDEC void SB_DECORATE(append_len)(String_Builder *sb, char *string, int length);
 #ifdef __cplusplus // If compiled as C++, provide an overload for append_len() as append(). Disable 'extern "C"' linkage for this to work.
 #ifdef SB_STATIC
@@ -138,6 +139,14 @@ static int sb__expand(String_Builder *sb) {
     sb->number_of_buffers++;
 
     return 1;
+}
+
+SB__PUBLICDEF int SB_DECORATE(is_empty)(String_Builder *sb)
+{
+    if (!sb->first_buffer.length)
+        return 1;
+
+    return 0;
 }
 
 SB__PUBLICDEF void SB_DECORATE(append_len)(String_Builder *sb, char *string, int length)
