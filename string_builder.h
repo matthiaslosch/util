@@ -3,6 +3,12 @@
 
 #include <stdarg.h> // va_list
 
+#if defined(_WIN32) || defined(WIN32)
+#define SB__WINDOWS
+#elif defined(__linux__) || (defined(__APPLE__) && defined(__MACH__)) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
+#define SB__UNIX
+#endif
+
 #ifndef SB_BUFFER_CAPACITY
 #define SB_BUFFER_CAPACITY 16384 // Define this before including to change the buffer capacity.
 #endif
@@ -62,7 +68,7 @@ SB__PUBLICDEC int SB_DECORATE(to_string)(String_Builder *sb, char **string);
 #include <string.h> // memcpy(), strlen()
 #include <stddef.h> // size_t, NULL
 
-#if _WIN32
+#if defined(SB__WINDOWS)
 #include <windows.h> // VirtualAlloc(), VirtualFree()
 
 void *sb__malloc(size_t size)
@@ -75,11 +81,21 @@ void sb__free(void *ptr, size_t size)
     VirtualFree(ptr, size, MEM_RELEASE);
 }
 
-#else
-#include <stdlib.h> // malloc(), free()
+#elif defined(SB__UNIX)
+#include <sys/mman.h> // mmap(), munmap()
 
-#define sb__malloc malloc
-#define sb__free   free
+void *sb__malloc(size_t size)
+{
+    return mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+}
+
+void sb__free(void *ptr, int size)
+{
+    munmap(ptr, size);
+}
+
+#else
+#error "The OS you're using is currently not supported by String Builder."
 #endif
 
 SB__PUBLICDEF void SB_DECORATE(init)(String_Builder *sb)
