@@ -209,16 +209,24 @@ SB__PUBLICDEF void SB_DECORATE(vappendf)(String_Builder *sb, char *format, va_li
         format += pos + 1;
 
         switch (*format) {
-        case 's':
+        case 's': {
             SB_DECORATE(append)(sb, va_arg(va, char *));
             break;
-        case 'd':
+        }
+        case 'd': {
             char val[20];
             itoa(va_arg(va, int), val, 10);
             SB_DECORATE(append)(sb, val);
             break;
-        case '%':
+        }
+        case 'c': {
+            char val = va_arg(va, char);
+            SB_DECORATE(append_len)(sb, &val, 1);
+            break;
+        }
+        case '%': {
             SB_DECORATE(append_len)(sb, "%", 1);
+        }
         }
         ++format;
     }
