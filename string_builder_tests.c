@@ -31,7 +31,7 @@ int main(void)
     assert(strcmp(buf2, "c, foo") == 0);
 
     // Test if appending via a format string works.
-    char *string = "string";
+    const char *string = "string";
     int positive = 123;
     int negative = -123;
     sb_appendf(&sb, ", %c, %s, %d, %d", c, string, positive, negative);

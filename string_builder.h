@@ -45,20 +45,20 @@ typedef struct String_Builder {
 SB__PUBLICDEC void SB_DECORATE(init)(String_Builder *sb);
 SB__PUBLICDEC void SB_DECORATE(free)(String_Builder *sb);
 SB__PUBLICDEC int SB_DECORATE(is_empty)(String_Builder *sb);
-SB__PUBLICDEC void SB_DECORATE(append_len)(String_Builder *sb, char *string, int length);
+SB__PUBLICDEC void SB_DECORATE(append_len)(String_Builder *sb, const char *string, int length);
 #ifdef __cplusplus // If compiled as C++, provide an overload for append_len() as append(). Disable 'extern "C"' linkage for this to work.
 #ifdef SB_STATIC
-static void SB_DECORATE(append)(String_Builder *sb, char *string, int length);
-static void SB_DECORATE(append)(String_Builder *sb, char *string);
+static void SB_DECORATE(append)(String_Builder *sb, const char *string, int length);
+static void SB_DECORATE(append)(String_Builder *sb, const char *string);
 #else
-extern void SB_DECORATE(append)(String_Builder *sb, char *string, int length);
-extern void SB_DECORATE(append)(String_Builder *sb, char *string);
+extern void SB_DECORATE(append)(String_Builder *sb, const char *string, int length);
+extern void SB_DECORATE(append)(String_Builder *sb, const char *string);
 #endif
 #else // Compiling as C, so link with 'extern "C"'.
-SB__PUBLICDEC void SB_DECORATE(append)(String_Builder *sb, char *string);
+SB__PUBLICDEC void SB_DECORATE(append)(String_Builder *sb, const char *string);
 #endif
-SB__PUBLICDEC void SB_DECORATE(vappendf)(String_Builder *sb, char *format, va_list va);
-SB__PUBLICDEC void SB_DECORATE(appendf)(String_Builder *sb, char *format, ...);
+SB__PUBLICDEC void SB_DECORATE(vappendf)(String_Builder *sb, const char *format, va_list va);
+SB__PUBLICDEC void SB_DECORATE(appendf)(String_Builder *sb, const char *format, ...);
 SB__PUBLICDEC int SB_DECORATE(to_string)(String_Builder *sb, char **string);
 
 #endif // !STRING_BUILDER_H_INCLUDE
@@ -149,12 +149,12 @@ SB__PUBLICDEF int SB_DECORATE(is_empty)(String_Builder *sb)
     return 0;
 }
 
-SB__PUBLICDEF void SB_DECORATE(append_len)(String_Builder *sb, char *string, int length)
+SB__PUBLICDEF void SB_DECORATE(append_len)(String_Builder *sb, const char *string, int length)
 {
     if (!sb)
         return;
 
-    char *cursor = string;
+    const char *cursor = string;
 
     // We might be given a string that is bigger than a single remaining or even empty bucket.
     // Check if that is the case. If it is, cut up the string into the biggest piece
@@ -178,27 +178,27 @@ SB__PUBLICDEF void SB_DECORATE(append_len)(String_Builder *sb, char *string, int
 // See the function delarations for an explanation for this.
 #ifdef __cplusplus
 #ifdef SB_STATIC
-static void SB_DECORATE(append)(String_Builder *sb, char *string, int length)
+static void SB_DECORATE(append)(String_Builder *sb, const char *string, int length)
 {
     SB_DECORATE(append_len)(sb, string, length);
 }
-static void SB_DECORATE(append)(String_Builder *sb, char *string)
+static void SB_DECORATE(append)(String_Builder *sb, const char *string)
 #else
-void SB_DECORATE(append)(String_Builder *sb, char *string, int length)
+void SB_DECORATE(append)(String_Builder *sb, const char *string, int length)
 {
     SB_DECORATE(append_len)(sb, string, length);
 }
-void SB_DECORATE(append)(String_Builder *sb, char *string)
+void SB_DECORATE(append)(String_Builder *sb, const char *string)
 #endif
 #else
-SB__PUBLICDEF void SB_DECORATE(append)(String_Builder *sb, char *string)
+SB__PUBLICDEF void SB_DECORATE(append)(String_Builder *sb, const char *string)
 #endif
 {
     int length = strlen(string);
     SB_DECORATE(append_len)(sb, string, length);
 }
 
-SB__PUBLICDEF void SB_DECORATE(vappendf)(String_Builder *sb, char *format, va_list va)
+SB__PUBLICDEF void SB_DECORATE(vappendf)(String_Builder *sb, const char *format, va_list va)
 {
     while (*format) {
         int pos = 0;
@@ -232,7 +232,7 @@ SB__PUBLICDEF void SB_DECORATE(vappendf)(String_Builder *sb, char *format, va_li
     }
 }
 
-SB__PUBLICDEF void SB_DECORATE(appendf)(String_Builder *sb, char *format, ...)
+SB__PUBLICDEF void SB_DECORATE(appendf)(String_Builder *sb, const char *format, ...)
 {
     va_list va;
     va_start(va, format);
