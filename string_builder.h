@@ -9,6 +9,15 @@
 #define SB__UNIX
 #endif
 
+#if defined(__has_attribute)
+#if __has_attribute(format)
+#define SB__ATTRIBUTE_FORMAT(fmt, va) __attribute__((format(printf, fmt, va)))
+#endif
+#endif
+#ifndef SB__ATTRIBUTE_FORMAT
+#define SB__ATTRIBUTE_FORMAT(...)
+#endif
+
 #ifndef SB_BUFFER_CAPACITY
 #define SB_BUFFER_CAPACITY 16384 // Define this before including to change the buffer capacity.
 #endif
@@ -58,7 +67,7 @@ extern void SB_DECORATE(append)(String_Builder *sb, const char *string);
 SB__PUBLICDEC void SB_DECORATE(append)(String_Builder *sb, const char *string);
 #endif
 SB__PUBLICDEC void SB_DECORATE(vappendf)(String_Builder *sb, const char *format, va_list va);
-SB__PUBLICDEC void SB_DECORATE(appendf)(String_Builder *sb, const char *format, ...);
+SB__PUBLICDEC void SB_DECORATE(appendf)(String_Builder *sb, const char *format, ...) SB__ATTRIBUTE_FORMAT(2, 3);
 SB__PUBLICDEC int SB_DECORATE(to_string)(String_Builder *sb, char **string);
 
 #endif // !STRING_BUILDER_H_INCLUDE
