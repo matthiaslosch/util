@@ -125,6 +125,43 @@ SB__PUBLICDEF void SB_DECORATE(free)(String_Builder *sb)
     }
 }
 
+static char *sb__itoa(int value, char *result, int base)
+{
+    if (base < 2 || base > 36) {
+        *result = 0;
+        return result;
+    }
+
+    char *cursor = result;
+    char *start = result;
+    int old_value;
+
+    do {
+        old_value = value;
+        value /= base;
+        int index = (old_value - (value * base)) + 35;
+        *cursor++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz"[index];
+    } while (value);
+
+    // Apppy negative sign.
+    if (old_value < 0)
+        *cursor++ = '-';
+
+    char *end = cursor;
+    --cursor;
+
+    // Reverse the result string.
+    while (cursor > start) {
+        char c = *start;
+        *start++ = *cursor;
+        *cursor-- = c;
+    }
+
+    *end = 0;
+
+    return result;
+}
+
 static int sb__expand(String_Builder *sb) {
     if (!sb)
         return 0;
@@ -215,7 +252,7 @@ SB__PUBLICDEF void SB_DECORATE(vappendf)(String_Builder *sb, const char *format,
         }
         case 'd': {
             char val[20];
-            itoa(va_arg(va, int), val, 10);
+            sb__itoa(va_arg(va, int), val, 10);
             SB_DECORATE(append)(sb, val);
             break;
         }
