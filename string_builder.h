@@ -266,7 +266,7 @@ SB__PUBLICDEF void SB_DECORATE(vappendf)(String_Builder *sb, const char *format,
             break;
         }
         case 'c': {
-            char val = va_arg(va, char);
+            char val = (char)va_arg(va, int);
             SB_DECORATE(append_len)(sb, &val, 1);
             break;
         }
