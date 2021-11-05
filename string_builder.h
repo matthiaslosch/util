@@ -78,6 +78,7 @@ SB__PUBLICDEC int SB_DECORATE(to_string)(String_Builder *sb, char **string);
 #include <string.h> // memcpy(), strlen()
 #include <stddef.h> // size_t, NULL
 
+#ifdef SB_SYSTEM_ALLOCATOR
 #if defined(SB__WINDOWS)
 #include <windows.h> // VirtualAlloc(), VirtualFree()
 
@@ -106,6 +107,20 @@ void sb__free(void *ptr, int size)
 
 #else
 #error "The OS you're using is currently not supported by String Builder."
+#endif
+#else // SB_SYSTEM_ALLOCATOR
+#include <stdlib.h>
+
+void *sb__malloc(size_t size)
+{
+    return malloc(size);
+}
+
+void sb__free(void *ptr, int size)
+{
+    (void)size;
+    free(ptr);
+}
 #endif
 
 SB__PUBLICDEF void SB_DECORATE(init)(String_Builder *sb)
