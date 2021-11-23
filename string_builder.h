@@ -55,16 +55,22 @@ SB__PUBLICDEC void SB_DECORATE(init)(String_Builder *sb);
 SB__PUBLICDEC void SB_DECORATE(free)(String_Builder *sb);
 SB__PUBLICDEC int SB_DECORATE(is_empty)(String_Builder *sb);
 SB__PUBLICDEC void SB_DECORATE(append_len)(String_Builder *sb, const char *string, int length);
+SB__PUBLICDEC void SB_DECORATE(unchecked_append_len)(String_Builder *sb, const char *string, int length);
 #ifdef __cplusplus // If compiled as C++, provide an overload for append_len() as append(). Disable 'extern "C"' linkage for this to work.
 #ifdef SB_STATIC
 static void SB_DECORATE(append)(String_Builder *sb, const char *string, int length);
 static void SB_DECORATE(append)(String_Builder *sb, const char *string);
+static void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string, int length);
+static void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string);
 #else
 extern void SB_DECORATE(append)(String_Builder *sb, const char *string, int length);
 extern void SB_DECORATE(append)(String_Builder *sb, const char *string);
+extern void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string, int length);
+extern void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string);
 #endif
 #else // Compiling as C, so link with 'extern "C"'.
 SB__PUBLICDEC void SB_DECORATE(append)(String_Builder *sb, const char *string);
+SB__PUBLICDEC void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string);
 #endif
 SB__PUBLICDEC void SB_DECORATE(vappendf)(String_Builder *sb, const char *format, va_list va);
 SB__PUBLICDEC void SB_DECORATE(appendf)(String_Builder *sb, const char *format, ...) SB__ATTRIBUTE_FORMAT(2, 3);
@@ -257,6 +263,36 @@ SB__PUBLICDEF void SB_DECORATE(append)(String_Builder *sb, const char *string)
 {
     int length = strlen(string);
     SB_DECORATE(append_len)(sb, string, length);
+}
+
+SB__PUBLICDEF void SB_DECORATE(unchecked_append_len)(String_Builder *sb, const char *string, int length)
+{
+    if (!sb)
+        return;
+
+    memcpy(sb->last_buffer->data + sb->last_buffer->length, string, length);
+    sb->last_buffer->length += length;
+}
+
+#ifdef __cplusplus
+#ifdef SB_STATIC
+static void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string, int length)
+{
+    SB_DECORATE(unchecked_append_len)(sb, string, length);
+}
+static void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string)
+#endif
+void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string, int length)
+{
+    SB_DECORATE(unchecked_append_len)(sb, string, length);
+}
+void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string)
+#else
+SB__PUBLICDEF void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string)
+#endif
+{
+    int length = strlen(string);
+    SB_DECORATE(unchecked_append_len)(sb, string, length);
 }
 
 SB__PUBLICDEF void SB_DECORATE(vappendf)(String_Builder *sb, const char *format, va_list va)

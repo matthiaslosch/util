@@ -39,6 +39,12 @@ int main(void)
     sb_to_string(&sb, &buf3);
     assert(strcmp(buf3, "c, foo, c, string, 123, -123") == 0);
 
+    // Test if appending a string unchecked works.
+    sb_unchecked_append(&sb, ", unchecked");
+    char *buf4;
+    sb_to_string(&sb, &buf4);
+    assert(strcmp(buf4, "c, foo, c, string, 123, -123, unchecked") == 0);
+
     // Test if dynamically allocating a new buffer works.
     for (int i = 0; i < SB_BUFFER_CAPACITY; ++i)
         sb_append_len(&sb, "c", 1);
@@ -55,9 +61,9 @@ int main(void)
     String_Builder sb_cpp;
     sb_init(&sb_cpp);
     sb_append(&sb_cpp, "This is a test", sizeof("This is a test")-1);
-    char *buf4;
-    sb_to_string(&sb_cpp, &buf4);
-    assert(strcmp(buf4, "This is a test") == 0);
+    char *buf5;
+    sb_to_string(&sb_cpp, &buf5);
+    assert(strcmp(buf5, "This is a test") == 0);
 
     puts("Tests passed for C++.");
     return 0;
