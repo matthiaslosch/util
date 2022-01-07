@@ -80,6 +80,7 @@ SB__PUBLICDEC int SB_DECORATE(to_string)(String_Builder *sb, char **string);
 
 #ifdef STRING_BUILDER_IMPLEMENTATION
 
+#include <assert.h> // assert()
 #include <stdarg.h> // va_list, va_start(), va_arg(), va_end()
 #include <string.h> // memcpy(), strlen()
 #include <stddef.h> // size_t, NULL
@@ -140,8 +141,7 @@ SB__PUBLICDEF void SB_DECORATE(init)(String_Builder *sb)
 
 SB__PUBLICDEF void SB_DECORATE(free)(String_Builder *sb)
 {
-    if (!sb)
-        return;
+    assert(sb);
 
     while (sb->number_of_buffers-- > 1) {
         // Get the second to last buffer.
@@ -192,9 +192,9 @@ static char *sb__itoa(int value, char *result, int base)
     return result;
 }
 
-static int sb__expand(String_Builder *sb) {
-    if (!sb)
-        return 0;
+static int sb__expand(String_Builder *sb)
+{
+    assert(sb);
 
     sb->last_buffer->next = (Sb_Buffer *)sb__malloc(sizeof(Sb_Buffer));
     if (!sb->last_buffer->next)
@@ -218,8 +218,7 @@ SB__PUBLICDEF int SB_DECORATE(is_empty)(String_Builder *sb)
 
 SB__PUBLICDEF void SB_DECORATE(append_len)(String_Builder *sb, const char *string, size_t length)
 {
-    if (!sb)
-        return;
+    assert(sb);
 
     const char *cursor = string;
 
@@ -267,8 +266,7 @@ SB__PUBLICDEF void SB_DECORATE(append)(String_Builder *sb, const char *string)
 
 SB__PUBLICDEF void SB_DECORATE(unchecked_append_len)(String_Builder *sb, const char *string, size_t length)
 {
-    if (!sb)
-        return;
+    assert(sb);
 
     memcpy(sb->last_buffer->data + sb->last_buffer->length, string, length);
     sb->last_buffer->length += length;
