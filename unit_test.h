@@ -3,6 +3,16 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
+#include <inttypes.h> // PRId64
+
+#if defined(_WIN32) || defined(WIN32)
+#include <windows.h> // QueryPerformanceFrequency(), QueryPerformanceCounter()
+#elif defined(__linux__) || (defined(__APPLE__) && defined(__MACH__)) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
+#include <sys/time.h> // struct timeval, gettimeofday(), timersub()
+#else
+#error "The OS you're using is currently not supported by Unit Test."
+#endif
 
 struct Test_Case_List {
     const char *test_case_name;
@@ -61,11 +71,38 @@ void add_test_case_to_list(const char *name, void (*function)(void))
         }                                                                                                             \
     } while (0)
 
-#define EXECUTE_TESTS()                                             \
-    while (list_head) {                                             \
-        list_head->test_case_function();                            \
-        printf("%s %s.\n", "Completed", list_head->test_case_name); \
-        list_head = list_head->next;                                \
+void execute_test(struct Test_Case_List *current)
+{
+    printf("Running test '%s'.\n", current->test_case_name);
+#if defined(_WIN32) || defined(WIN32)
+    LARGE_INTEGER start_counter;
+    LARGE_INTEGER end_counter;
+    LARGE_INTEGER perf_counter_frequency;
+    if (!QueryPerformanceFrequency(&perf_counter_frequency))
+        fprintf(stderr, "QueryPerformanceFrequency failed.\n");
+    QueryPerformanceCounter(&start_counter);
+#else
+    struct timeval start_counter;
+    gettimeofday(&start_counter, NULL);
+#endif
+    current->test_case_function();
+#if defined(_WIN32) || defined(WIN32)
+    QueryPerformanceCounter(&end_counter);
+    int64_t counter_elapsed = (end_counter.QuadPart - start_counter.QuadPart) / perf_counter_frequency.QuadPart * 1000;
+#else
+    struct timeval end_counter;
+    gettimeofday(&end_counter, NULL);
+    struct timeval counter_delta;
+    timersub(&end_counter, &start_counter, &counter_delta);
+    int64_t counter_elapsed = counter_delta.tv_sec * 1000 + counter_delta.tv_usec / 1000;
+#endif
+    printf("%s test '%s' in %" PRId64 " ms.\n", "Completed", current->test_case_name, counter_elapsed);
+}
+
+#define EXECUTE_TESTS()              \
+    while (list_head) {              \
+        execute_test(list_head);     \
+        list_head = list_head->next; \
     }
 
 #endif // !UNIT_TEST_H
