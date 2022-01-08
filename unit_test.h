@@ -22,6 +22,7 @@ struct Test_Case_List {
 
 static struct Test_Case_List *list_head = NULL;
 static struct Test_Case_List *list_tail = NULL;
+static int number_of_test_cases = 0;
 
 void add_test_case_to_list(const char *name, void (*function)(void))
 {
@@ -34,6 +35,7 @@ void add_test_case_to_list(const char *name, void (*function)(void))
     list_tail->test_case_name = name;
     list_tail->test_case_function = function;
     list_tail->next = NULL;
+    ++number_of_test_cases;
 
     if (!list_head)
         list_head = list_tail;
@@ -71,38 +73,70 @@ void add_test_case_to_list(const char *name, void (*function)(void))
         }                                                                                                             \
     } while (0)
 
-void execute_test(struct Test_Case_List *current)
+struct Test_Timer {
+#if defined(_WIN32) || defined(WIN32)
+    int64_t start_counter;
+#else
+    struct timeval start_counter;
+#endif
+};
+
+struct Test_Timer start_timer()
 {
-    printf("Running test '%s'.\n", current->test_case_name);
+    struct Test_Timer result;
 #if defined(_WIN32) || defined(WIN32)
     LARGE_INTEGER start_counter;
-    LARGE_INTEGER end_counter;
-    LARGE_INTEGER perf_counter_frequency;
-    if (!QueryPerformanceFrequency(&perf_counter_frequency))
-        fprintf(stderr, "QueryPerformanceFrequency failed.\n");
     QueryPerformanceCounter(&start_counter);
+    result.start_counter = start_counter.QuadPart;
+    return result;
 #else
     struct timeval start_counter;
     gettimeofday(&start_counter, NULL);
+    result.start_counter = start_counter;
+    return result;
 #endif
-    current->test_case_function();
+}
+
+int64_t elapsed_milliseconds(struct Test_Timer timer)
+{
 #if defined(_WIN32) || defined(WIN32)
+    LARGE_INTEGER perf_counter_frequency;
+    if (!QueryPerformanceFrequency(&perf_counter_frequency))
+        fprintf(stderr, "QueryPerformanceFrequency failed.\n");
+    LARGE_INTEGER end_counter;
     QueryPerformanceCounter(&end_counter);
-    int64_t counter_elapsed = (end_counter.QuadPart - start_counter.QuadPart) / perf_counter_frequency.QuadPart * 1000;
+    int64_t counter_elapsed = (end_counter.QuadPart - timer.start_counter) / perf_counter_frequency.QuadPart * 1000;
 #else
     struct timeval end_counter;
     gettimeofday(&end_counter, NULL);
     struct timeval counter_delta;
-    timersub(&end_counter, &start_counter, &counter_delta);
+    timersub(&end_counter, &timer.start_counter, &counter_delta);
     int64_t counter_elapsed = counter_delta.tv_sec * 1000 + counter_delta.tv_usec / 1000;
 #endif
+    return counter_elapsed;
+}
+
+void execute_test_case(struct Test_Case_List *current)
+{
+    printf("Running test '%s'.\n", current->test_case_name);
+    struct Test_Timer timer = start_timer();
+    current->test_case_function();
+    int64_t counter_elapsed = elapsed_milliseconds(timer);
     printf("%s test '%s' in %" PRId64 " ms.\n", "Completed", current->test_case_name, counter_elapsed);
 }
 
-#define EXECUTE_TESTS()              \
-    while (list_head) {              \
-        execute_test(list_head);     \
-        list_head = list_head->next; \
+void execute_all_test_cases()
+{
+    struct Test_Timer global_timer = start_timer();
+    while (list_head) {
+        execute_test_case(list_head);
+        list_head = list_head->next;
     }
+    int64_t global_time_elapsed = elapsed_milliseconds(global_timer);
+    printf("Finished %d tests in %" PRId64 " ms.\n", number_of_test_cases, global_time_elapsed);
+}
+
+#define EXECUTE_TESTS() \
+    execute_all_test_cases()
 
 #endif // !UNIT_TEST_H
