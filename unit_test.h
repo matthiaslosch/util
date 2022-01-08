@@ -24,6 +24,8 @@ static struct Test_Case_List *list_head = NULL;
 static struct Test_Case_List *list_tail = NULL;
 static int number_of_test_cases = 0;
 
+int failed_current_test_case = 0;
+
 void add_test_case_to_list(const char *name, void (*function)(void))
 {
     if (!list_tail) {
@@ -53,7 +55,7 @@ void add_test_case_to_list(const char *name, void (*function)(void))
     do {                                                                                                   \
         if (!(x)) {                                                                                        \
             fprintf(stderr, "\033[31;1mFAIL\033[0m: %s:%d: EXPECT(%s) failed.\n", __FILE__, __LINE__, #x); \
-            abort();                                                                                       \
+            failed_current_test_case = 1;                                                                  \
         }                                                                                                  \
     } while (0)
 
@@ -61,7 +63,7 @@ void add_test_case_to_list(const char *name, void (*function)(void))
     do {                                                                                                              \
         if ((a) == (b)) {                                                                                             \
             fprintf(stderr, "\033[31;1mFAIL\033[0m: %s:%d: EXPECT_NE(%s, %s) failed.\n", __FILE__, __LINE__, #a, #b); \
-            abort();                                                                                                  \
+            failed_current_test_case = 1;                                                                             \
         }                                                                                                             \
     } while (0)
 
@@ -69,7 +71,7 @@ void add_test_case_to_list(const char *name, void (*function)(void))
     do {                                                                                                              \
         if ((a) != (b)) {                                                                                             \
             fprintf(stderr, "\033[31;1mFAIL\033[0m: %s:%d: EXPECT_EQ(%s, %s) failed.\n", __FILE__, __LINE__, #a, #b); \
-            abort();                                                                                                  \
+            failed_current_test_case = 1;                                                                             \
         }                                                                                                             \
     } while (0)
 
@@ -122,18 +124,23 @@ void execute_test_case(struct Test_Case_List *current)
     struct Test_Timer timer = start_timer();
     current->test_case_function();
     int64_t counter_elapsed = elapsed_milliseconds(timer);
-    printf("%s test '%s' in %" PRId64 " ms.\n", "Completed", current->test_case_name, counter_elapsed);
+    printf("%s test '%s' in %" PRId64 " ms.\n", failed_current_test_case ? "Failed" : "Completed", current->test_case_name, counter_elapsed);
 }
 
 void execute_all_test_cases()
 {
+    int failed = 0;
     struct Test_Timer global_timer = start_timer();
     while (list_head) {
         execute_test_case(list_head);
         list_head = list_head->next;
+        if (failed_current_test_case)
+            ++failed;
+        failed_current_test_case = 0;
     }
     int64_t global_time_elapsed = elapsed_milliseconds(global_timer);
     printf("Finished %d tests in %" PRId64 " ms.\n", number_of_test_cases, global_time_elapsed);
+    printf("Out of %d tests, %d passed and %d failed.\n", number_of_test_cases, number_of_test_cases - failed, failed);
 }
 
 #define EXECUTE_TESTS() \
