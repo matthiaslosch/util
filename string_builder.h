@@ -226,7 +226,7 @@ SB__PUBLICDEF void SB_DECORATE(append_len)(String_Builder *sb, const char *strin
     // Check if that is the case. If it is, cut up the string into the biggest piece
     // that can fit into the last bucket. Create a new bucket after that and repeat
     // until the remaining string is smaller than the capacity of the last bucket.
-    int remaining_space = SB_BUFFER_CAPACITY - sb->last_buffer->length;
+    size_t remaining_space = SB_BUFFER_CAPACITY - sb->last_buffer->length;
     while ((remaining_space - length) <= 0) {
         memcpy(sb->last_buffer->data + sb->last_buffer->length, cursor, remaining_space);
         cursor += remaining_space;
@@ -362,7 +362,7 @@ SB__PUBLICDEF int SB_DECORATE(to_string)(String_Builder *sb, char **string)
 
     *string = result;
 
-    return total_length;
+    return (int)total_length;
 }
 
 #endif // STRING_BUILDER_IMPLEMENTATION
