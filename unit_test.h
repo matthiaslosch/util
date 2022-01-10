@@ -124,7 +124,7 @@ void execute_test_case(struct Test_Case_List *current)
     struct Test_Timer timer = start_timer();
     current->test_case_function();
     int64_t counter_elapsed = elapsed_milliseconds(timer);
-    printf("%s test '%s' in %" PRId64 " ms.\n", failed_current_test_case ? "Failed" : "Completed", current->test_case_name, counter_elapsed);
+    printf("%s test '%s' in %" PRId64 " ms.\n", failed_current_test_case ? "\033[31;1mFailed\033[0m" : "\033[32;1mCompleted\033[0m", current->test_case_name, counter_elapsed);
 }
 
 void execute_all_test_cases()
@@ -140,7 +140,7 @@ void execute_all_test_cases()
     }
     int64_t global_time_elapsed = elapsed_milliseconds(global_timer);
     printf("Finished %d tests in %" PRId64 " ms.\n", number_of_test_cases, global_time_elapsed);
-    printf("Out of %d tests, %d passed and %d failed.\n", number_of_test_cases, number_of_test_cases - failed, failed);
+    printf("Out of %d tests, %d %s and %d %s.\n", number_of_test_cases, number_of_test_cases - failed, number_of_test_cases - failed ? "\033[32;1mpassed\033[0m" : "passed", failed, failed ? "\033[31;1mfailed\033[0m" : "failed");
 }
 
 #define EXECUTE_TESTS() \
