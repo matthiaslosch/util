@@ -2,6 +2,24 @@
 
 set -eu
 
+positional=()
+keep_build=""
+
+while [[ $# -gt 0 ]]; do
+    key="$1"
+
+    case $key in
+        -keep-build)
+            keep_build="true"
+            shift # past argument.
+            ;;
+        *) #unknown option
+            positional+=("$1")
+            shift # past argument.
+            ;;
+    esac
+done
+
 mkdir -p ../build
 
 sources_c=test_string_builder.c
@@ -33,4 +51,4 @@ echo -e "\nRunning Clang-compiled C++ tests for string_builder.h.."
 popd > /dev/null
 
 rm $sources_cpp
-rm -r ../build
+if [ -z "$keep_build" ]; then rm -r ../build; fi

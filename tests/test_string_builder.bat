@@ -12,6 +12,14 @@ if "%Platform%" neq "x64" (
     exit /b 1
 )
 
+set keep_build=
+
+:parse_arguments
+if "%~1"=="" goto end_parse
+if "%~1"=="-keep-build" (set keep_build=true)
+shift
+:end_parse
+
 if not exist ..\build mkdir ..\build
 
 set sources_c=test_string_builder.c
@@ -38,4 +46,4 @@ echo Running C++ tests for string_builder.h...
 popd
 
 del %sources_cpp%
-rmdir /s /q ..\build
+if not defined keep_build (rmdir /s /q ..\build)
