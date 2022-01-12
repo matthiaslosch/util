@@ -31,7 +31,7 @@ set exe_name_cpp=test_string_builder_cpp.exe
 
 set compiler_flags=/Zi /W4
 
-copy %sources_c% %sources_cpp%
+copy %sources_c% %sources_cpp% >NUL 2>NUL
 pushd ..\build
 echo Compiling tests for string_builder.h...
 cl /nologo %compiler_flags% %warning_flags% /Fe%exe_name_c% ..\tests\%sources_c% /link %libraries%
