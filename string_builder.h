@@ -301,6 +301,10 @@ SB__PUBLICDEF void SB_DECORATE(vappendf)(String_Builder *sb, const char *format,
             ++pos;
         }
         SB_DECORATE(append_len)(sb, format, pos);
+
+        if (!format[pos])
+            return;
+
         format += pos + 1;
 
         switch (*format) {
