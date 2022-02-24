@@ -93,10 +93,29 @@ TEST_CASE(append_string)
     char c = 'A';
     const char *buffer = "ABCDEF";
     sb_append_len(&test_string_builder, &c, 1);
-    sb_append(&test_string_builder, "BCDEF");
+    sb_append_string(&test_string_builder, "BCDEF");
 
     EXPECT_EQ(test_string_builder.first_buffer.data[0], 'A');
     EXPECT(strcmp(buffer, "ABCDEF") == 0);
+}
+
+TEST_CASE(append_bytes)
+{
+    String_Builder test_string_builder;
+    sb_init(&test_string_builder);
+
+    struct Test_Struct {
+        int a;
+        char b;
+    };
+
+    struct Test_Struct test_struct;
+    test_struct.a = 12345;
+    test_struct.b = 2;
+
+    sb_append_len(&test_string_builder, &test_struct, sizeof(struct Test_Struct));
+
+    EXPECT(memcmp(test_string_builder.first_buffer.data, &test_struct, sizeof(struct Test_Struct)) == 0);
 }
 
 TEST_CASE(to_string)
@@ -105,7 +124,7 @@ TEST_CASE(to_string)
     sb_init(&test_string_builder);
 
     char *buffer;
-    sb_append(&test_string_builder, "ABCDEF");
+    sb_append_string(&test_string_builder, "ABCDEF");
     sb_to_string(&test_string_builder, &buffer);
 
     EXPECT(strcmp(buffer, "ABCDEF") == 0);
@@ -116,6 +135,7 @@ int main(void)
     REGISTER_TEST_CASE(empty);
     REGISTER_TEST_CASE(append_number);
     REGISTER_TEST_CASE(append_string);
+    REGISTER_TEST_CASE(append_bytes);
     REGISTER_TEST_CASE(to_string);
 
     EXECUTE_TESTS();

@@ -74,8 +74,9 @@ typedef struct String_Builder {
 SB__PUBLICDEC void SB_DECORATE(init)(String_Builder *sb);
 SB__PUBLICDEC void SB_DECORATE(free)(String_Builder *sb);
 SB__PUBLICDEC int SB_DECORATE(is_empty)(String_Builder *sb);
-SB__PUBLICDEC void SB_DECORATE(append_len)(String_Builder *sb, const char *string, size_t length);
-SB__PUBLICDEC void SB_DECORATE(unchecked_append_len)(String_Builder *sb, const char *string, size_t length);
+SB__PUBLICDEC void SB_DECORATE(append_len)(String_Builder *sb, const void *bytes, size_t length);
+SB__PUBLICDEC void SB_DECORATE(unchecked_append_len)(String_Builder *sb, const void *bytes, size_t length);
+SB__PUBLICDEC void SB_DECORATE(unchecked_append_string)(String_Builder *sb, const char *string);
 SB__PUBLICDEC void SB_DECORATE(append_string)(String_Builder *sb, const char *string);
 SB__PUBLICDEC void SB_DECORATE(append_u8)(String_Builder *sb, sb__u8 val);
 SB__PUBLICDEC void SB_DECORATE(append_u16)(String_Builder *sb, sb__u16 val);
@@ -85,11 +86,14 @@ SB__PUBLICDEC void SB_DECORATE(append_i8)(String_Builder *sb, sb__i8 val);
 SB__PUBLICDEC void SB_DECORATE(append_i16)(String_Builder *sb, sb__i16 val);
 SB__PUBLICDEC void SB_DECORATE(append_i32)(String_Builder *sb, sb__i32 val);
 SB__PUBLICDEC void SB_DECORATE(append_i64)(String_Builder *sb, sb__i64 val);
+SB__PUBLICDEC void SB_DECORATE(vappendf)(String_Builder *sb, const char *format, va_list va);
+SB__PUBLICDEC void SB_DECORATE(appendf)(String_Builder *sb, const char *format, ...) SB__ATTRIBUTE_FORMAT(2, 3);
+SB__PUBLICDEC int SB_DECORATE(to_string)(String_Builder *sb, char **string);
 
 // Provide overloads for C++.
 #ifdef __cplusplus
 #ifdef SB_STATIC
-static void SB_DECORATE(append)(String_Builder *sb, const char *string, size_t length);
+static void SB_DECORATE(append)(String_Builder *sb, const void *bytes, size_t length);
 static void SB_DECORATE(append)(String_Builder *sb, const char *string);
 static void SB_DECORATE(append)(String_Builder *sb, sb__u8 val);
 static void SB_DECORATE(append)(String_Builder *sb, sb__u16 val);
@@ -99,11 +103,10 @@ static void SB_DECORATE(append)(String_Builder *sb, sb__i8 val);
 static void SB_DECORATE(append)(String_Builder *sb, sb__i16 val);
 static void SB_DECORATE(append)(String_Builder *sb, sb__i32 val);
 static void SB_DECORATE(append)(String_Builder *sb, sb__i64 val);
-
-static void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string, size_t length);
+static void SB_DECORATE(unchecked_append)(String_Builder *sb, const void *bytes, size_t length);
 static void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string);
 #else
-extern void SB_DECORATE(append)(String_Builder *sb, const char *string, size_t length);
+extern void SB_DECORATE(append)(String_Builder *sb, const void *bytes, size_t length);
 extern void SB_DECORATE(append)(String_Builder *sb, const char *string);
 extern void SB_DECORATE(append)(String_Builder *sb, sb__u8 val);
 extern void SB_DECORATE(append)(String_Builder *sb, sb__u16 val);
@@ -113,17 +116,10 @@ extern void SB_DECORATE(append)(String_Builder *sb, sb__i8 val);
 extern void SB_DECORATE(append)(String_Builder *sb, sb__i16 val);
 extern void SB_DECORATE(append)(String_Builder *sb, sb__i32 val);
 extern void SB_DECORATE(append)(String_Builder *sb, sb__i64 val);
-extern void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string, size_t length);
+extern void SB_DECORATE(unchecked_append)(String_Builder *sb, const void *bytes, size_t length);
 extern void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string);
 #endif
-#else // Compiling as C, so link with 'extern "C"'.
-SB__PUBLICDEC void SB_DECORATE(append_string)(String_Builder *sb, const char *string);
-SB__PUBLICDEC void SB_DECORATE(append)(String_Builder *sb, const char *string);
-SB__PUBLICDEC void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string);
 #endif
-SB__PUBLICDEC void SB_DECORATE(vappendf)(String_Builder *sb, const char *format, va_list va);
-SB__PUBLICDEC void SB_DECORATE(appendf)(String_Builder *sb, const char *format, ...) SB__ATTRIBUTE_FORMAT(2, 3);
-SB__PUBLICDEC int SB_DECORATE(to_string)(String_Builder *sb, char **string);
 
 #endif // !STRING_BUILDER_H_INCLUDE
 
@@ -265,11 +261,11 @@ SB__PUBLICDEF int SB_DECORATE(is_empty)(String_Builder *sb)
     return 0;
 }
 
-SB__PUBLICDEF void SB_DECORATE(append_len)(String_Builder *sb, const char *string, size_t length)
+SB__PUBLICDEF void SB_DECORATE(append_len)(String_Builder *sb, const void *bytes, size_t length)
 {
     assert(sb);
 
-    const char *cursor = string;
+    const unsigned char *cursor = (const unsigned char *)bytes;
 
     // We might be given a string that is bigger than a single remaining or even empty bucket.
     // Check if that is the case. If it is, cut up the string into the biggest piece
@@ -408,30 +404,15 @@ SB__PUBLICDEF void SB_DECORATE(append_i64)(String_Builder *sb, sb__i64 val)
     sb->last_buffer->length += 8;
 }
 
-SB__PUBLICDEF void SB_DECORATE(unchecked_append_len)(String_Builder *sb, const char *string, size_t length)
+SB__PUBLICDEF void SB_DECORATE(unchecked_append_len)(String_Builder *sb, const void *bytes, size_t length)
 {
     assert(sb);
 
-    memcpy(sb->last_buffer->data + sb->last_buffer->length, string, length);
+    memcpy(sb->last_buffer->data + sb->last_buffer->length, bytes, length);
     sb->last_buffer->length += length;
 }
 
-#ifdef __cplusplus
-#ifdef SB_STATIC
-static void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string, size_t length)
-{
-    SB_DECORATE(unchecked_append_len)(sb, string, length);
-}
-static void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string)
-#endif
-void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string, size_t length)
-{
-    SB_DECORATE(unchecked_append_len)(sb, string, length);
-}
-void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string)
-#else
-SB__PUBLICDEF void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string)
-#endif
+SB__PUBLICDEF void SB_DECORATE(unchecked_append_string)(String_Builder *sb, const char *string)
 {
     size_t length = strlen(string);
     SB_DECORATE(unchecked_append_len)(sb, string, length);
@@ -453,13 +434,13 @@ SB__PUBLICDEF void SB_DECORATE(vappendf)(String_Builder *sb, const char *format,
 
         switch (*format) {
         case 's': {
-            SB_DECORATE(append)(sb, va_arg(va, char *));
+            SB_DECORATE(append_string)(sb, va_arg(va, char *));
             break;
         }
         case 'd': {
             char val[20];
             sb__itoa(va_arg(va, int), val, 10);
-            SB_DECORATE(append)(sb, val);
+            SB_DECORATE(append_string)(sb, val);
             break;
         }
         case 'c': {
@@ -517,9 +498,9 @@ SB__PUBLICDEF int SB_DECORATE(to_string)(String_Builder *sb, char **string)
 
 #ifdef __cplusplus
 #ifdef SB_STATIC
-static void SB_DECORATE(append)(String_Builder *sb, const char *string, size_t length)
+static void SB_DECORATE(append)(String_Builder *sb, const void *bytes, size_t length)
 {
-    SB_DECORATE(append_len)(sb, string, length);
+    SB_DECORATE(append_len)(sb, bytes, length);
 }
 
 static void SB_DECORATE(append)(String_Builder *sb, const char *string)
@@ -567,11 +548,22 @@ static void SB_DECORATE(append)(String_Builder *sb, sb__i64 val)
     SB_DECORATE(append_i64)(sb, val);
 }
 
-#else
-void SB_DECORATE(append)(String_Builder *sb, const char *string, size_t length)
+static void SB_DECORATE(unchecked_append)(String_Builder *sb, const void *bytes, size_t length)
 {
-    SB_DECORATE(append_len)(sb, string, length);
+    SB_DECORATE(unchecked_append_len)(sb, bytes, length);
 }
+
+static void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string)
+{
+    size_t length = strlen(string);
+    SB_DECORATE(unchecked_append_len)(sb, string, length);
+}
+#else
+void SB_DECORATE(append)(String_Builder *sb, const void *bytes, size_t length)
+{
+    SB_DECORATE(append_len)(sb, bytes, length);
+}
+
 void SB_DECORATE(append)(String_Builder *sb, const char *string)
 {
     SB_DECORATE(append_string)(sb, string);
@@ -616,12 +608,18 @@ void SB_DECORATE(append)(String_Builder *sb, sb__i64 val)
 {
     SB_DECORATE(append_i64)(sb, val);
 }
-#endif
-#else
-SB__PUBLICDEF void SB_DECORATE(append)(String_Builder *sb, const char *string)
+
+void SB_DECORATE(unchecked_append)(String_Builder *sb, const void *bytes, size_t length)
 {
-    SB_DECORATE(append_string)(sb, string);
+    SB_DECORATE(unchecked_append_len)(sb, bytes, length);
 }
+
+void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string)
+{
+    size_t length = strlen(string);
+    SB_DECORATE(unchecked_append_len)(sb, string,length);
+}
+#endif
 #endif
 
 #endif // STRING_BUILDER_IMPLEMENTATION
