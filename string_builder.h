@@ -86,8 +86,7 @@ SB__PUBLICDEC void SB_DECORATE(append_i16)(String_Builder *sb, sb__i16 val);
 SB__PUBLICDEC void SB_DECORATE(append_i32)(String_Builder *sb, sb__i32 val);
 SB__PUBLICDEC void SB_DECORATE(append_i64)(String_Builder *sb, sb__i64 val);
 
-// If compiled as C++, provide an overload for append_len() as append().
-// Disable 'extern "C"' linkage for this to work.
+// Provide overloads for C++.
 #ifdef __cplusplus
 #ifdef SB_STATIC
 static void SB_DECORATE(append)(String_Builder *sb, const char *string, size_t length);
@@ -296,116 +295,6 @@ SB__PUBLICDEF void SB_DECORATE(append_string)(String_Builder *sb, const char *st
     size_t length = strlen(string);
     SB_DECORATE(append_len)(sb, string, length);
 }
-
-// See the function delarations for an explanation for this.
-#ifdef __cplusplus
-#ifdef SB_STATIC
-static void SB_DECORATE(append)(String_Builder *sb, const char *string, size_t length)
-{
-    SB_DECORATE(append_len)(sb, string, length);
-}
-
-static void SB_DECORATE(append)(String_Builder *sb, const char *string)
-{
-    SB_DECORATE(append_string)(sb, string);
-}
-
-static void SB_DECORATE(append)(String_Builder *sb, sb__u8 val)
-{
-    SB_DECORATE(append_u8)(sb, val);
-}
-
-static void SB_DECORATE(append)(String_Builder *sb, sb__u16 val)
-{
-    SB_DECORATE(append_u16)(sb, val);
-}
-
-static void SB_DECORATE(append)(String_Builder *sb, sb__u32 val)
-{
-    SB_DECORATE(append_u32)(sb, val);
-}
-
-static void SB_DECORATE(append)(String_Builder *sb, sb__u64 val)
-{
-    SB_DECORATE(append_u64)(sb, val);
-}
-
-static void SB_DECORATE(append)(String_Builder *sb, sb__i8 val)
-{
-    SB_DECORATE(append_i8)(sb, val);
-}
-
-static void SB_DECORATE(append)(String_Builder *sb, sb__16 val)
-{
-    SB_DECORATE(append_i16)(sb, val);
-}
-
-static void SB_DECORATE(append)(String_Builder *sb, sb__i32 val)
-{
-    SB_DECORATE(append_i32)(sb, val);
-}
-
-static void SB_DECORATE(append)(String_Builder *sb, sb__i64 val)
-{
-    SB_DECORATE(append_i64)(sb, val);
-}
-
-#else
-void SB_DECORATE(append)(String_Builder *sb, const char *string, size_t length)
-{
-    SB_DECORATE(append_len)(sb, string, length);
-}
-void SB_DECORATE(append)(String_Builder *sb, const char *string)
-{
-    SB_DECORATE(append_string)(sb, string);
-}
-
-void SB_DECORATE(append)(String_Builder *sb, sb__u8 val)
-{
-    SB_DECORATE(append_u8)(sb, val);
-}
-
-void SB_DECORATE(append)(String_Builder *sb, sb__u16 val)
-{
-    SB_DECORATE(append_u16)(sb, val);
-}
-
-void SB_DECORATE(append)(String_Builder *sb, sb__u32 val)
-{
-    SB_DECORATE(append_u32)(sb, val);
-}
-
-void SB_DECORATE(append)(String_Builder *sb, sb__u64 val)
-{
-    SB_DECORATE(append_u64)(sb, val);
-}
-
-void SB_DECORATE(append)(String_Builder *sb, sb__i8 val)
-{
-    SB_DECORATE(append_i8)(sb, val);
-}
-
-void SB_DECORATE(append)(String_Builder *sb, sb__i16 val)
-{
-    SB_DECORATE(append_i16)(sb, val);
-}
-
-void SB_DECORATE(append)(String_Builder *sb, sb__i32 val)
-{
-    SB_DECORATE(append_i32)(sb, val);
-}
-
-void SB_DECORATE(append)(String_Builder *sb, sb__i64 val)
-{
-    SB_DECORATE(append_i64)(sb, val);
-}
-#endif
-#else
-SB__PUBLICDEF void SB_DECORATE(append)(String_Builder *sb, const char *string)
-{
-    SB_DECORATE(append_string)(sb, string);
-}
-#endif
 
 SB__PUBLICDEF void SB_DECORATE(append_u8)(String_Builder *sb, sb__u8 val)
 {
@@ -623,5 +512,116 @@ SB__PUBLICDEF int SB_DECORATE(to_string)(String_Builder *sb, char **string)
 
     return (int)total_length;
 }
+
+// C++ append() overload implementations.
+
+#ifdef __cplusplus
+#ifdef SB_STATIC
+static void SB_DECORATE(append)(String_Builder *sb, const char *string, size_t length)
+{
+    SB_DECORATE(append_len)(sb, string, length);
+}
+
+static void SB_DECORATE(append)(String_Builder *sb, const char *string)
+{
+    SB_DECORATE(append_string)(sb, string);
+}
+
+static void SB_DECORATE(append)(String_Builder *sb, sb__u8 val)
+{
+    SB_DECORATE(append_u8)(sb, val);
+}
+
+static void SB_DECORATE(append)(String_Builder *sb, sb__u16 val)
+{
+    SB_DECORATE(append_u16)(sb, val);
+}
+
+static void SB_DECORATE(append)(String_Builder *sb, sb__u32 val)
+{
+    SB_DECORATE(append_u32)(sb, val);
+}
+
+static void SB_DECORATE(append)(String_Builder *sb, sb__u64 val)
+{
+    SB_DECORATE(append_u64)(sb, val);
+}
+
+static void SB_DECORATE(append)(String_Builder *sb, sb__i8 val)
+{
+    SB_DECORATE(append_i8)(sb, val);
+}
+
+static void SB_DECORATE(append)(String_Builder *sb, sb__16 val)
+{
+    SB_DECORATE(append_i16)(sb, val);
+}
+
+static void SB_DECORATE(append)(String_Builder *sb, sb__i32 val)
+{
+    SB_DECORATE(append_i32)(sb, val);
+}
+
+static void SB_DECORATE(append)(String_Builder *sb, sb__i64 val)
+{
+    SB_DECORATE(append_i64)(sb, val);
+}
+
+#else
+void SB_DECORATE(append)(String_Builder *sb, const char *string, size_t length)
+{
+    SB_DECORATE(append_len)(sb, string, length);
+}
+void SB_DECORATE(append)(String_Builder *sb, const char *string)
+{
+    SB_DECORATE(append_string)(sb, string);
+}
+
+void SB_DECORATE(append)(String_Builder *sb, sb__u8 val)
+{
+    SB_DECORATE(append_u8)(sb, val);
+}
+
+void SB_DECORATE(append)(String_Builder *sb, sb__u16 val)
+{
+    SB_DECORATE(append_u16)(sb, val);
+}
+
+void SB_DECORATE(append)(String_Builder *sb, sb__u32 val)
+{
+    SB_DECORATE(append_u32)(sb, val);
+}
+
+void SB_DECORATE(append)(String_Builder *sb, sb__u64 val)
+{
+    SB_DECORATE(append_u64)(sb, val);
+}
+
+void SB_DECORATE(append)(String_Builder *sb, sb__i8 val)
+{
+    SB_DECORATE(append_i8)(sb, val);
+}
+
+void SB_DECORATE(append)(String_Builder *sb, sb__i16 val)
+{
+    SB_DECORATE(append_i16)(sb, val);
+}
+
+void SB_DECORATE(append)(String_Builder *sb, sb__i32 val)
+{
+    SB_DECORATE(append_i32)(sb, val);
+}
+
+void SB_DECORATE(append)(String_Builder *sb, sb__i64 val)
+{
+    SB_DECORATE(append_i64)(sb, val);
+}
+#endif
+#else
+SB__PUBLICDEF void SB_DECORATE(append)(String_Builder *sb, const char *string)
+{
+    SB_DECORATE(append_string)(sb, string);
+}
+#endif
 
 #endif // STRING_BUILDER_IMPLEMENTATION
