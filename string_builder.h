@@ -39,8 +39,28 @@
 #define SB_DECORATE(name) sb_##name // Define this before including if you want to change the names.
 #endif
 
+#ifdef _MSC_VER
+#define sb__u8  unsigned __int8
+#define sb__i8  __int8
+#define sb__u16 unsigned __int16
+#define sb__i16 __int16
+#define sb__u32 unsigned __int32
+#define sb__i32 __int32
+#define sb__u64 unsigned __int64
+#define sb__i64 __int64
+#else
+#define sb__u8  unsigned char
+#define sb__i8  char
+#define sb__u16 unsigned short
+#define sb__i16 short
+#define sb__u32 unsigned int
+#define sb__i32 int
+#define sb__u64 unsigned long long
+#define sb__i64 long long
+#endif
+
 typedef struct Sb_Buffer {
-    char data[SB_BUFFER_CAPACITY];
+    unsigned char data[SB_BUFFER_CAPACITY];
     size_t length;
     struct Sb_Buffer *next;
 } Sb_Buffer;
@@ -56,19 +76,49 @@ SB__PUBLICDEC void SB_DECORATE(free)(String_Builder *sb);
 SB__PUBLICDEC int SB_DECORATE(is_empty)(String_Builder *sb);
 SB__PUBLICDEC void SB_DECORATE(append_len)(String_Builder *sb, const char *string, size_t length);
 SB__PUBLICDEC void SB_DECORATE(unchecked_append_len)(String_Builder *sb, const char *string, size_t length);
-#ifdef __cplusplus // If compiled as C++, provide an overload for append_len() as append(). Disable 'extern "C"' linkage for this to work.
+SB__PUBLICDEC void SB_DECORATE(append_string)(String_Builder *sb, const char *string);
+SB__PUBLICDEC void SB_DECORATE(append_u8)(String_Builder *sb, sb__u8 val);
+SB__PUBLICDEC void SB_DECORATE(append_u16)(String_Builder *sb, sb__u16 val);
+SB__PUBLICDEC void SB_DECORATE(append_u32)(String_Builder *sb, sb__u32 val);
+SB__PUBLICDEC void SB_DECORATE(append_u64)(String_Builder *sb, sb__u64 val);
+SB__PUBLICDEC void SB_DECORATE(append_i8)(String_Builder *sb, sb__i8 val);
+SB__PUBLICDEC void SB_DECORATE(append_i16)(String_Builder *sb, sb__i16 val);
+SB__PUBLICDEC void SB_DECORATE(append_i32)(String_Builder *sb, sb__i32 val);
+SB__PUBLICDEC void SB_DECORATE(append_i64)(String_Builder *sb, sb__i64 val);
+
+// If compiled as C++, provide an overload for append_len() as append().
+// Disable 'extern "C"' linkage for this to work.
+#ifdef __cplusplus
 #ifdef SB_STATIC
 static void SB_DECORATE(append)(String_Builder *sb, const char *string, size_t length);
 static void SB_DECORATE(append)(String_Builder *sb, const char *string);
+static void SB_DECORATE(append)(String_Builder *sb, sb__u8 val);
+static void SB_DECORATE(append)(String_Builder *sb, sb__u16 val);
+static void SB_DECORATE(append)(String_Builder *sb, sb__u32 val);
+static void SB_DECORATE(append)(String_Builder *sb, sb__u64 val);
+static void SB_DECORATE(append)(String_Builder *sb, sb__i8 val);
+static void SB_DECORATE(append)(String_Builder *sb, sb__i16 val);
+static void SB_DECORATE(append)(String_Builder *sb, sb__i32 val);
+static void SB_DECORATE(append)(String_Builder *sb, sb__i64 val);
+
 static void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string, size_t length);
 static void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string);
 #else
 extern void SB_DECORATE(append)(String_Builder *sb, const char *string, size_t length);
 extern void SB_DECORATE(append)(String_Builder *sb, const char *string);
+extern void SB_DECORATE(append)(String_Builder *sb, sb__u8 val);
+extern void SB_DECORATE(append)(String_Builder *sb, sb__u16 val);
+extern void SB_DECORATE(append)(String_Builder *sb, sb__u32 val);
+extern void SB_DECORATE(append)(String_Builder *sb, sb__u64 val);
+extern void SB_DECORATE(append)(String_Builder *sb, sb__i8 val);
+extern void SB_DECORATE(append)(String_Builder *sb, sb__i16 val);
+extern void SB_DECORATE(append)(String_Builder *sb, sb__i32 val);
+extern void SB_DECORATE(append)(String_Builder *sb, sb__i64 val);
 extern void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string, size_t length);
 extern void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string);
 #endif
 #else // Compiling as C, so link with 'extern "C"'.
+SB__PUBLICDEC void SB_DECORATE(append_string)(String_Builder *sb, const char *string);
 SB__PUBLICDEC void SB_DECORATE(append)(String_Builder *sb, const char *string);
 SB__PUBLICDEC void SB_DECORATE(unchecked_append)(String_Builder *sb, const char *string);
 #endif
@@ -241,6 +291,12 @@ SB__PUBLICDEF void SB_DECORATE(append_len)(String_Builder *sb, const char *strin
     sb->last_buffer->length += length;
 }
 
+SB__PUBLICDEF void SB_DECORATE(append_string)(String_Builder *sb, const char *string)
+{
+    size_t length = strlen(string);
+    SB_DECORATE(append_len)(sb, string, length);
+}
+
 // See the function delarations for an explanation for this.
 #ifdef __cplusplus
 #ifdef SB_STATIC
@@ -248,20 +304,219 @@ static void SB_DECORATE(append)(String_Builder *sb, const char *string, size_t l
 {
     SB_DECORATE(append_len)(sb, string, length);
 }
+
 static void SB_DECORATE(append)(String_Builder *sb, const char *string)
+{
+    SB_DECORATE(append_string)(sb, string);
+}
+
+static void SB_DECORATE(append)(String_Builder *sb, sb__u8 val)
+{
+    SB_DECORATE(append_u8)(sb, val);
+}
+
+static void SB_DECORATE(append)(String_Builder *sb, sb__u16 val)
+{
+    SB_DECORATE(append_u16)(sb, val);
+}
+
+static void SB_DECORATE(append)(String_Builder *sb, sb__u32 val)
+{
+    SB_DECORATE(append_u32)(sb, val);
+}
+
+static void SB_DECORATE(append)(String_Builder *sb, sb__u64 val)
+{
+    SB_DECORATE(append_u64)(sb, val);
+}
+
+static void SB_DECORATE(append)(String_Builder *sb, sb__i8 val)
+{
+    SB_DECORATE(append_i8)(sb, val);
+}
+
+static void SB_DECORATE(append)(String_Builder *sb, sb__16 val)
+{
+    SB_DECORATE(append_i16)(sb, val);
+}
+
+static void SB_DECORATE(append)(String_Builder *sb, sb__i32 val)
+{
+    SB_DECORATE(append_i32)(sb, val);
+}
+
+static void SB_DECORATE(append)(String_Builder *sb, sb__i64 val)
+{
+    SB_DECORATE(append_i64)(sb, val);
+}
+
 #else
 void SB_DECORATE(append)(String_Builder *sb, const char *string, size_t length)
 {
     SB_DECORATE(append_len)(sb, string, length);
 }
 void SB_DECORATE(append)(String_Builder *sb, const char *string)
+{
+    SB_DECORATE(append_string)(sb, string);
+}
+
+void SB_DECORATE(append)(String_Builder *sb, sb__u8 val)
+{
+    SB_DECORATE(append_u8)(sb, val);
+}
+
+void SB_DECORATE(append)(String_Builder *sb, sb__u16 val)
+{
+    SB_DECORATE(append_u16)(sb, val);
+}
+
+void SB_DECORATE(append)(String_Builder *sb, sb__u32 val)
+{
+    SB_DECORATE(append_u32)(sb, val);
+}
+
+void SB_DECORATE(append)(String_Builder *sb, sb__u64 val)
+{
+    SB_DECORATE(append_u64)(sb, val);
+}
+
+void SB_DECORATE(append)(String_Builder *sb, sb__i8 val)
+{
+    SB_DECORATE(append_i8)(sb, val);
+}
+
+void SB_DECORATE(append)(String_Builder *sb, sb__i16 val)
+{
+    SB_DECORATE(append_i16)(sb, val);
+}
+
+void SB_DECORATE(append)(String_Builder *sb, sb__i32 val)
+{
+    SB_DECORATE(append_i32)(sb, val);
+}
+
+void SB_DECORATE(append)(String_Builder *sb, sb__i64 val)
+{
+    SB_DECORATE(append_i64)(sb, val);
+}
 #endif
 #else
 SB__PUBLICDEF void SB_DECORATE(append)(String_Builder *sb, const char *string)
-#endif
 {
-    size_t length = strlen(string);
-    SB_DECORATE(append_len)(sb, string, length);
+    SB_DECORATE(append_string)(sb, string);
+}
+#endif
+
+SB__PUBLICDEF void SB_DECORATE(append_u8)(String_Builder *sb, sb__u8 val)
+{
+    assert(sb);
+
+    size_t remaining_space = SB_BUFFER_CAPACITY - sb->last_buffer->length;
+    if (remaining_space <= 0) {
+        if (!sb__expand(sb))
+            return;
+    }
+
+    sb->last_buffer->data[0] = val;
+    sb->last_buffer->length++;
+}
+
+SB__PUBLICDEF void SB_DECORATE(append_u16)(String_Builder *sb, sb__u16 val)
+{
+    assert(sb);
+
+    size_t remaining_space = SB_BUFFER_CAPACITY - sb->last_buffer->length;
+    if (remaining_space <= 1) {
+        if (!sb__expand(sb))
+            return;
+    }
+
+    memcpy(sb->last_buffer->data + sb->last_buffer->length, &val, 2);
+    sb->last_buffer->length += 2;
+}
+
+SB__PUBLICDEF void SB_DECORATE(append_u32)(String_Builder *sb, sb__u32 val)
+{
+    assert(sb);
+
+    size_t remaining_space = SB_BUFFER_CAPACITY - sb->last_buffer->length;
+    if (remaining_space <= 3) {
+        if (!sb__expand(sb))
+            return;
+    }
+
+    memcpy(sb->last_buffer->data + sb->last_buffer->length, &val, 4);
+    sb->last_buffer->length += 4;
+}
+
+SB__PUBLICDEF void SB_DECORATE(append_u64)(String_Builder *sb, sb__u64 val)
+{
+    assert(sb);
+
+    size_t remaining_space = SB_BUFFER_CAPACITY - sb->last_buffer->length;
+    if (remaining_space <= 7) {
+        if (!sb__expand(sb))
+            return;
+    }
+
+    memcpy(sb->last_buffer->data + sb->last_buffer->length, &val, 8);
+    sb->last_buffer->length += 8;
+}
+
+SB__PUBLICDEF void SB_DECORATE(append_i8)(String_Builder *sb, sb__i8 val)
+{
+    assert(sb);
+
+    size_t remaining_space = SB_BUFFER_CAPACITY - sb->last_buffer->length;
+    if (remaining_space <= 0) {
+        if (!sb__expand(sb))
+            return;
+    }
+
+    memcpy(sb->last_buffer->data + sb->last_buffer->length, (sb__u8 *)&val, 1);
+    sb->last_buffer->length++;
+}
+
+SB__PUBLICDEF void SB_DECORATE(append_i16)(String_Builder *sb, sb__i16 val)
+{
+    assert(sb);
+
+    size_t remaining_space = SB_BUFFER_CAPACITY - sb->last_buffer->length;
+    if (remaining_space <= 1) {
+        if (!sb__expand(sb))
+            return;
+    }
+
+    memcpy(sb->last_buffer->data + sb->last_buffer->length, (sb__u8 *)&val, 2);
+    sb->last_buffer->length += 2;
+}
+
+SB__PUBLICDEF void SB_DECORATE(append_i32)(String_Builder *sb, sb__i32 val)
+{
+    assert(sb);
+
+    size_t remaining_space = SB_BUFFER_CAPACITY - sb->last_buffer->length;
+    if (remaining_space <= 3) {
+        if (!sb__expand(sb))
+            return;
+    }
+
+    memcpy((sb__i32 *)(sb->last_buffer->data + sb->last_buffer->length), &val, 4);
+    sb->last_buffer->length += 4;
+}
+
+SB__PUBLICDEF void SB_DECORATE(append_i64)(String_Builder *sb, sb__i64 val)
+{
+    assert(sb);
+
+    size_t remaining_space = SB_BUFFER_CAPACITY - sb->last_buffer->length;
+    if (remaining_space <= 7) {
+        if (!sb__expand(sb))
+            return;
+    }
+
+    memcpy((sb__i64 *)(sb->last_buffer->data + sb->last_buffer->length), &val, 8);
+    sb->last_buffer->length += 8;
 }
 
 SB__PUBLICDEF void SB_DECORATE(unchecked_append_len)(String_Builder *sb, const char *string, size_t length)
