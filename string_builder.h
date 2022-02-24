@@ -88,7 +88,8 @@ SB__PUBLICDEC void SB_DECORATE(append_i32)(String_Builder *sb, sb__i32 val);
 SB__PUBLICDEC void SB_DECORATE(append_i64)(String_Builder *sb, sb__i64 val);
 SB__PUBLICDEC void SB_DECORATE(vappendf)(String_Builder *sb, const char *format, va_list va);
 SB__PUBLICDEC void SB_DECORATE(appendf)(String_Builder *sb, const char *format, ...) SB__ATTRIBUTE_FORMAT(2, 3);
-SB__PUBLICDEC int SB_DECORATE(to_string)(String_Builder *sb, char **string);
+SB__PUBLICDEC int SB_DECORATE(to_c_string)(String_Builder *sb, char **string);
+SB__PUBLICDEC int SB_DECORATE(to_byte_string)(String_Builder *sb, unsigned char **string);
 
 // Provide overloads for C++.
 #ifdef __cplusplus
@@ -464,7 +465,7 @@ SB__PUBLICDEF void SB_DECORATE(appendf)(String_Builder *sb, const char *format, 
     va_end(va);
 }
 
-SB__PUBLICDEF int SB_DECORATE(to_string)(String_Builder *sb, char **string)
+SB__PUBLICDEF int SB_DECORATE(to_c_string)(String_Builder *sb, char **string)
 {
     if (!sb) {
         *string = NULL;
@@ -481,6 +482,35 @@ SB__PUBLICDEF int SB_DECORATE(to_string)(String_Builder *sb, char **string)
     result[total_length] = '\0';
 
     char *cursor = result;
+    buf = &sb->first_buffer;
+
+    do {
+        memcpy(cursor, buf->data, buf->length);
+        cursor += buf->length;
+        buf = buf->next;
+    } while (buf);
+
+    *string = result;
+
+    return (int)total_length;
+}
+
+SB__PUBLICDEF int SB_DECORATE(to_byte_string)(String_Builder *sb, unsigned char **string)
+{
+    if (!sb) {
+        *string = NULL;
+        return 0; // FIXME: This is probably not a good idea.
+    }
+
+    size_t total_length = sb->first_buffer.length;
+    Sb_Buffer *buf = &sb->first_buffer;
+    while (buf->next) {
+        buf = buf->next;
+        total_length += buf->length;
+    }
+    unsigned char *result = (unsigned char *)sb__malloc(total_length);
+
+    unsigned char *cursor = result;
     buf = &sb->first_buffer;
 
     do {

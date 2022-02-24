@@ -120,14 +120,32 @@ TEST_CASE(append_bytes)
 
 TEST_CASE(to_string)
 {
-    String_Builder test_string_builder;
-    sb_init(&test_string_builder);
+    String_Builder test_string_builder_c_string;
+    sb_init(&test_string_builder_c_string);
 
-    char *buffer;
-    sb_append_string(&test_string_builder, "ABCDEF");
-    sb_to_string(&test_string_builder, &buffer);
+    char *buffer_c_string;
+    sb_append_string(&test_string_builder_c_string, "ABCDEF");
+    sb_to_c_string(&test_string_builder_c_string, &buffer_c_string);
 
-    EXPECT(strcmp(buffer, "ABCDEF") == 0);
+    EXPECT(strcmp(buffer_c_string, "ABCDEF") == 0);
+
+    String_Builder test_string_builder_byte_string;
+    sb_init(&test_string_builder_byte_string);
+
+    struct Test_Struct {
+        int a;
+        char b;
+    };
+
+    struct Test_Struct test_struct;
+    test_struct.a = 12345;
+    test_struct.b = 2;
+
+    unsigned char *buffer_byte_string;
+    sb_append_len(&test_string_builder_byte_string, &test_struct, sizeof(struct Test_Struct));
+    sb_to_byte_string(&test_string_builder_byte_string, &buffer_byte_string);
+
+    EXPECT(memcmp(buffer_byte_string, &test_struct, sizeof(struct Test_Struct)) == 0);
 }
 
 int main(void)
