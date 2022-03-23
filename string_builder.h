@@ -303,7 +303,7 @@ SB__PUBLICDEF void SB_DECORATE(append_u8)(String_Builder *sb, sb__u8 val)
             return;
     }
 
-    sb->last_buffer->data[0] = val;
+    sb->last_buffer->data[sb->last_buffer->length] = val;
     sb->last_buffer->length++;
 }
 
